@@ -247,7 +247,7 @@ Calculate optimal route for a transit request.
   ],
   "estimated_time": "25 minutes",
   "distance": "8.5 km",
-  "cost": "$2,950 COP",
+  "cost": "$3,550 COP",
   "recommendations": "Use correct platform | Rush hour: expect delays",
   "alternatives": [
     "Direct SITP route (~15-20 min longer)",

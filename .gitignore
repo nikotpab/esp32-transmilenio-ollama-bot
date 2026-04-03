@@ -67,3 +67,5 @@ Thumbs.db
 *.html
 _site/
 docs/_build/
+
+.fake

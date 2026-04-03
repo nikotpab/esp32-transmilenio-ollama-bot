@@ -1,12 +1,12 @@
-# Arquitectura del Sistema: Bot TransMilenio Dinámico
+# System Architecture: Dynamic TransMilenio Bot Orchestrator
 
-Este documento técnico de ingeniería despliega la arquitectura end-to-end de las micro-integraciones del Agente en Docker para transitar Bogotá y superar las propias limitantes de APIs de proveedores globales. 
+This technical document outlines the end-to-end architecture of the Dockerized Bogota Transit Agent. The system implements a robust micro-integration footprint designed to supersede generic global API providers by establishing city-contextualized data flows, chronological parity, and crowdsourced live heuristics.
 
-## Diagrama Funcional de Capas
+## Functional Layer Diagram
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                                INTERNET / NUBE                               │
+│                                INTERNET / CLOUD                              │
 │                                                                              │
 │  ┌────────────┐    ┌─────────────┐   ┌─────────────────┐   ┌──────────────┐  │
 │  │  Telegram  │    │ Google Maps │   │ Open-Meteo API  │   │ Google News  │  │
@@ -18,62 +18,62 @@ Este documento técnico de ingeniería despliega la arquitectura end-to-end de l
 │  │                           BOT CONTAINER (Docker)                       │  │
 │  │                                                                        │  │
 │  │    ┌─────────────────────────┐               ┌────────────────────┐    │  │
-│  │    │     Telegram Handler    │ ◄───────────► │  Memoria Caché     │    │  │
-│  │    │    (python-telegram)    │               │  (Bloqueos/Clima)  │    │  │
+│  │    │     Telegram Handler    │ ◄───────────► │   Cache Memory     │    │  │
+│  │    │    (python-telegram)    │               │  (Blockades/Rain)  │    │  │
 │  │    └────────────┬────────────┘               └────────────────────┘    │  │
 │  │                 │                                                      │  │
 │  │    ┌────────────▼────────────┐               ┌────────────────────┐    │  │
-│  │    │     Motor de Algoritmo  │ ◄───────────► │ Inyector Vagones   │    │  │
-│  │    │ (Noche/Lluvia/Bloqueos) │               │ y Micro-Ruteos     │    │  │
+│  │    │    Algorithmic Engine   │ ◄───────────► │  Wagon Injector &  │    │  │
+│  │    │  (Night/Weather/Blocks) │               │   Micro-Routing    │    │  │
 │  │    └────────────┬────────────┘               └────────────────────┘    │  │
 │  │                 │                                                      │  │
 │  │  ┌──────────────┼─────────────────────────────────────────────┐        │  │
-│  │  │              ▼                     Llamadas Nativas API    │        │  │
+│  │  │              ▼                       Native API Calls      │        │  │
 │  │  │   ┌────────────────────┐                                   │        │  │
-│  │  │   │ Ollama LLM Local   │ (Extrae Intención del Usuario)    │        │  │
+│  │  │   │ Ollama LLM Local   │ (Extracts User Intent)            │        │  │
 │  │  │   └────────────────────┘                                   │        │  │
 │  │  └────────────────────────────────────────────────────────────┘        │  │
 │  └────────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Módulo de Escaneo Comunitario (El "Waze" del Sistema)
-Google Maps tradicionalmente se demora 30+ minutos en advertir un cierre social sobre una troncal. Para remediar esto, el bot cuenta un algoritmo dual:
+## Crowdsourced Heuristics Module (The "Waze" Subsystem)
+Traditional GIS APIs like Google Maps often experience high latency (30+ minutes) when notifying closures across Bogota's trunk infrastructure. To mitigate this, the bot deploys a dual-algorithm approach:
 
-1. **Scraping RSS Pasivo (`update_live_news_blocks`):** Se ejecuta un *XML Fetcher* contra servidores de Google News restringido a notas de 24hrs sobre "Transmilenio". Si el motor capta titulares publicando bloqueos que mencionan el título de la estación (Ej "Obras en Portal Eldorado"), castiga automáticamente los grafos hacia esa ruta por 2 horas sin intervención humana.
-2. **Escucha Activa:** Los usuarios pueden utilizar `/bloqueo [Estación]` con el celular dentro de un bus detenido para que este ecosistema se comparta horizontalmente hacia todos los demás usuarios de Telegram solicitando rutas en tiempo real.
+1. **Passive RSS Scraping (`update_live_news_blocks`):** An asynchronous XML Fetcher periodically polls Google News servers restricted to a rolling 24-hour window analyzing "TransMilenio" occurrences. If the engine intercepts aggregated headlines identifying closures structurally coupled to our localized station dictionary (e.g., _"Roadworks affecting Portal Eldorado"_), it natively assigns a heavy duration penalty to all edges intersecting that specific node for a synchronized TTL interval of 2 hours.
+2. **Active Telemetry:** Passengers experiencing sudden delays can execute the `/bloqueo [Station]` command through their handheld devices inside a grounded bus. This triggers an instant horizontal topology quarantine across the ecosystem, subsequently diverting any future passenger requesting interacting routes away from the blocked perimeter.
 
-## Motor Físico y Ruteo Predictivo
+## Physics Engine and Predictive Routing
 
-### 1. Extractor LLM Seguro (Ollama)
-Cualquier mensaje directo es enviado cifrado hacia un servidor puente Docker ancla al `host.docker.internal` comunicándose con `Ollama`. Aísla la solicitud para encontrar si el usuario pidió viajar "mañana", "noche" o "ya", e identificar orígenes desordenados en *diccionarios puros* JSON.
+### 1. Secure NLP Orchestration (Local Ollama)
+Any inbound conversation stream is intercepted and relayed onto a bridged Docker host layer (`host.docker.internal`), initiating JSON-bound queries strictly with a local `Ollama` framework. It filters temporal contexts (e.g. "tomorrow", "night") and translates messy geographical semantics into raw structured dictionary arrays, effectively sandboxing traveler telemetry off untrusted cloud environments.
 
-### 2. Conversión Unix de Agendas y Ventanas Operativas 
-El algoritmo detecta contextos de tiempo arrojados en NLP como "Tarde" o "Mañana". Se procesa en una conversión cruzando el desvío `UTC-5` de Bogotá para generar estampados **Unix Timestamps exactos**, para forzar a la API Direcciones de Google Networks a ceñir los buses netamente dentro de los tiempos físicos de sus operaciones y desechar buses no funcionales.
+### 2. Chronological Operations and Unix Conversion
+As the NLP returns vague temporal bounds, an alignment daemon intercepts Bogota's spatial standard (`UTC-5`) and converts textual data into strict numerical **Unix Timestamps**. Supplying these standardized stamps to Google's Transit API overrides phantom-buses, natively dictating the solver to acknowledge operational shifts and closed gateways.
 
-### 3. Interceptor Meteorológico y Factor de Noche
-- Si `open-meteo` devuelve >0 mm de probabilidad de caída de agua, las fórmulas matemáticas de pesos penalizan fuertemente transbordos largos.
-- Si el reloj interno Bogotano indica hora pico de inseguridad (>21:00 PM), una condición inyecta puntajes drásticos bloqueando el retorno prioritario de buses azules de SITP y dictaminando usar circuitos del carril exclusivo central, por lo general resguardados mejor bajo faroles de techo alto.
+### 3. Meteorological Sensor and Nocturnal Multipliers
+- If `open-meteo` telemetry yields `>0.0 mm` probability of localized precipitation, mathematical weights aggressively penalize pedestrian connections mapping over 400 linear meters.
+- The internal chronometer observes vulnerable peak hours (`>21:00 PM`). A rigid mathematical rule inflates penalties against solitary urban fleet buses (SITP network), forcing the final topological path matrix to favor BRT (Trunk) indoor infrastructure protected by illuminated concourses.
 
-### 4. Diccionario Intrínseco de Micro-Vagones
-Se rebasaron los alcances genéricos de Google por un `VAGONES_COMPLEJOS` Dictionary Injector. Cuando una topología se detecta originándose desde una super-estación tipo Calle 100, la consola inyectará visualmente el Túnel/Carpa exacta para erradicar las molestias de usuarios perdidos.
+### 4. Micro-Routing Enclosed Topologies
+To address the generic limitations of conventional waypoint directives, the engine maintains a deep mapping matrix (`VAGONES_COMPLEJOS`). When generating textual step-by-step guidance, the processor identifies high-complexity transport nodes (e.g., _Calle 100_ or _Ricaurte_) and conditionally appends tunnel directions, canopy designations, and precise wagon loading areas to alleviate passenger disorientation within expansive structures.
 
 ---
 
-## Arquitectura de Datos Dinámica
-Durante el armado de una respuesta se construye un "Documento de Ruta", cuyo Header consolida toda la información cruzada.
-Ejemplo:
+## Dynamic State Topology
+During traversal generation, an overriding "Route Document" dictates interaction schemas.
+
 ```json
 {
-  "header": "⚠ RUTEO EVADIENDO BLOQUEOS\n ⛔ Evitadas: Portal Americas (Noticias) | \n\n Ruta: Ricaurte -> Portal Norte",
+  "header": "⚠ ROUTE EVADING CLOSURES\n ⛔ Avoided: Portal Americas (News Broadcast) | \n\n Ruta: Ricaurte -> Portal Norte",
   "options": [
     {
-      "route_summary": "TRONCAL - Proximo bus: en 12 min",
+      "route_summary": "TRUNK - Next bus: arriving in 12 min",
       "steps": ["..."]
     }
   ]
 }
 ```
 
-## Control de Calidad
-- Este ecosistema asegura que la memoria esté controlada por Limpiezas Garbage Collector asíncronas para el bot en Python, evitando colapsos locales dentro del sistema subyacente.
+## Component Quality Assurance
+- Routine state flushing methodologies utilize asynchronous Python Garbage Collectors protecting background RAM limits, guaranteeing steady state machine execution under heavy Telegram polling throughput.

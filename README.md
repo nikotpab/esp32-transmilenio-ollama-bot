@@ -1,4 +1,4 @@
-# Bogota Public Transit Route Bot (TransMilenio/SITP)
+# Bogotá Public Transit Route Bot (TransMilenio/SITP)
 
 Distributed IoT system for public transit route consultation in Bogota, Colombia. The system integrates an ESP32 microcontroller, Telegram messaging platform, and a proxy server with natural language processing capabilities.
 
